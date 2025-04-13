@@ -26,10 +26,10 @@ const userSchema = new mongoose.Schema({
         type: String, 
         default: 'Not Selected' 
     },  
-    adress: { 
-        type: String, 
-        default: {line1:'', line2:''}
-    },  
+    address: {
+        line1: { type: String}, // Require line1
+        line2: { type: String }
+      },  
     phone: { 
         type: String, 
         default: '000000000' 

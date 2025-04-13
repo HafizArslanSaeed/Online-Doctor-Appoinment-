@@ -25,9 +25,9 @@ function Doctors() {
       <p className='text-gray-600  text-xl'>Browse through the doctors specialist.</p>
       <div className='flex flex-col sm:flex-row items-start gap-5 mt-5'>
         <div className='flex flex-col gap-4 text-sm text-gray-600 '>
-          <p onClick={() => speciality === "General physician" ? navigate("/doctor") : navigate('/doctor/General physician')}
+          <p onClick={() => speciality === "General physician" ? navigate("/doctor") : navigate('/doctor/General Physician')}
             className={`${commonClass} ${speciality === "General physician" ? "bg-indigo-100" : ""}`}>
-            General physician
+            General Physician
           </p>
 
           <p onClick={() => speciality === "Gynecologist" ? navigate("/doctor") : navigate('/doctor/Gynecologist')}
