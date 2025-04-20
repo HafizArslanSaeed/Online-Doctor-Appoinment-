@@ -27,9 +27,9 @@ const userSchema = new mongoose.Schema({
         default: 'Not Selected' 
     },  
     address: {
-        line1: { type: String}, // Require line1
-        line2: { type: String }
-      },  
+        line1: { type: String, default: "" }, 
+        line2: { type: String, default: "" }
+      },      
     phone: { 
         type: String, 
         default: '000000000' 
