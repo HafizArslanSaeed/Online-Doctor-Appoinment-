@@ -94,27 +94,37 @@ const registerUser = async (req, res) => {
     res.json({ success: false, message:error.message });
   }
  }
-// Api for updateProfile Data
-const updateProfile = async (req,res) =>{
+ const updateProfile = async (req, res) => {
   try {
-    const {userId,name ,phone ,address ,dob , gender} = req.body;
+    const { userId, name, phone, address, dob, gender } = req.body;
     const imageFile = req.file;
-    if (imageFile){
-      //upload cloudinary
-      const imageUpload = await cloudinary.uploader.upload(imageFile.path, {resource_type: "image"});
-      const imageUrl = imageUpload.secure_url;
-      await userModel.findByIdAndUpdate(userId, {image:imageUrl});
 
+    if (!name || !phone || !dob || !gender) {
+      return res.json({ success: false, message: "Please fill all the fields" });
     }
-    if(!name || !phone ||!dob ||!gender){
-      return res.json({success:false, message:"Please fill all the fields"});
+
+    let updateData = { name, phone, dob, gender };
+
+    if (address) {
+      try {
+        updateData.address = JSON.parse(address);
+      } catch (err) {
+        return res.json({ success: false, message: "Invalid address format" });
+      }
     }
-    await userModel.findByIdAndUpdate(userId, {name ,phone ,address:JSON.parse(address),dob,gender})
-    res.json({success:true, message:"Profile updated successfully"});
+
+    if (imageFile) {
+      const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+      updateData.image = imageUpload.secure_url;
+    }
+
+    await userModel.findByIdAndUpdate(userId, updateData);
+    res.json({ success: true, message: "Profile updated successfully" });
+
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
   }
-}
+};
 
 export { loginUser, registerUser  , getProfile ,updateProfile};

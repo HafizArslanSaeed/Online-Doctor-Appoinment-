@@ -16,11 +16,10 @@ export const AppContextProvider = (props) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 
-
+// Get All doctor Data
   const getAllDoctor = async () => {
     try {
       const { data } = await axios.get(`${backendUrl}/api/doctor/list`);
-      console.log(data.message)
       setDoctors(data.message)
     } catch (error) {
       console.log("Error fetching doctors:", error);
@@ -33,7 +32,6 @@ export const AppContextProvider = (props) => {
       const { data } = await axios.get(`${backendUrl}/api/user/get-profile`, { headers: { token } });
       if (data.success) {
         setUserData(data.userData)
-        console.log(data.userData)
       } else {
         toast.error(data.message)
       }

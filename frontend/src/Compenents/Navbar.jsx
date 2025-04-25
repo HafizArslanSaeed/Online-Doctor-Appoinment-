@@ -7,7 +7,7 @@ import { AppContext } from '../context/AppContext';
 
 function Navbar() {
   const navigate = useNavigate()
-  const {token, setToken } = useContext(AppContext); 
+  const {token, setToken , userData , setUserData } = useContext(AppContext); 
 
 const logOut = ()=>{
   setToken('')
@@ -40,7 +40,9 @@ const logOut = ()=>{
         token ? (
           <div className="flex gap-2 items-center cursor-pointer group relative">
             {/* Profile Picture */}
-            <img className="w-8 rounded-full" src={assets.profile_pic} alt="Profile" />
+            <img className="w-8 rounded-full" src={userData.image || assets.upload_icon} alt="Profile" />
+
+
 
             {/* Dropdown Icon */}
             <img className="w-3.5 h-2" src={assets.dropdown_icon} alt="Dropdown" />
