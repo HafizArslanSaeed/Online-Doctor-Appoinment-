@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
+import appointmentModel from "../models/appointmentModel.js";
+import doctorModel from "../models/doctorModel.js";
 
 
 // create JWT Token
@@ -127,4 +129,56 @@ const registerUser = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser  , getProfile ,updateProfile};
+const bookAppointment = async (req, res) => {
+  try {
+    console.log("Incoming request body:", req.body); // 🔍 Debug line
+
+    const { docId, slotDate, slotTime, userData, docData, amount, date } = req.body;
+    const userId = req.body.userId;
+
+    // Check if docData or available is missing
+    if (!docData || docData.available === undefined) {
+      return res.status(400).json({ success: false, message: "Doctor availability data is missing." });
+    }
+
+    if (!docData.available) {
+      return res.status(400).json({ success: false, message: "Doctor is not available for booking." });
+    }
+
+    const existingAppointment = await appointmentModel.findOne({
+      docId,
+      slotDate,
+      slotTime,
+      cancelled: false,
+    });
+
+    if (existingAppointment) {
+      return res.status(400).json({ success: false, message: "This slot is already booked. Please choose another slot." });
+    }
+
+    const newAppointment = await appointmentModel.create({
+      userId,
+      docId,
+      slotDate,
+      slotTime,
+      userData,
+      docData,
+      amount,
+      date,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Appointment booked successfully!",
+      appointment: newAppointment,
+    });
+
+  } catch (error) {
+    console.error("❌ Error in booking appointment:", error); // ✅ log the error
+    return res.status(500).json({ success: false, message: "Failed to book appointment" });
+  }
+};
+
+
+
+export { loginUser, registerUser  , getProfile ,updateProfile , bookAppointment};

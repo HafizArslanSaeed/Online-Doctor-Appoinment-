@@ -1,17 +1,20 @@
 import React, { useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { AppContext } from '../context/AppContext';
-import { useParams, useNavigate } from 'react-router-dom'; // Import useNavigate correctly
+import { useParams, useNavigate } from 'react-router-dom';
 import { assets } from '../assets/assets';
+import axios from 'axios'; // Import axios
+import { toast } from 'react-toastify';
 
 function Appointment() {
   const [docsInfo, setDocsInfo] = useState({});
   const { docId } = useParams();
-  const { doctors } = useContext(AppContext);
+  const { doctors, userData, backendUrl, token } = useContext(AppContext); // Assuming you have user info in context
   const [docSlots, setDocSlots] = useState([]);
   const [slotIndex, setSlotIndex] = useState(0);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
+  const [loading, setLoading] = useState(false); // For button loading state
+  const navigate = useNavigate();
   const daysOfWeek = ['Sun', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-  const navigate = useNavigate(); // Correctly use the useNavigate hook
 
   const today = useMemo(() => new Date(), []);
 
@@ -64,6 +67,64 @@ function Appointment() {
     fetchDocInfo();
     getAvailableSlots();
   }, [fetchDocInfo, getAvailableSlots]);
+ 
+
+  // -------------- Book Appointment Function --------------
+  const handleBookAppointment = async () => {
+    if(!token){
+      toast.warn("Please login to book appointment ");
+      navigate('/login');
+      return;
+    }
+    if (!docSlots[slotIndex] || !docSlots[slotIndex].slots[selectedSlotIndex]) {
+      toast.warn("Please select a slot first.");
+      return;
+    }
+
+    const selectedSlot = docSlots[slotIndex].slots[selectedSlotIndex];
+    const selectedDate = docSlots[slotIndex].date;
+
+    try {
+      setLoading(true);
+
+      const res = await axios.post(`${backendUrl}/api/user/book-appointment`, {
+        userId: userData._id,
+        docId: docsInfo._id,
+        slotDate: selectedDate.toISOString().split('T')[0],
+        slotTime: selectedSlot.formattedTime,
+        userData: {
+          name: userData.name,
+          email: userData.email,
+        },
+        docData: {
+          name: docsInfo.name,
+          speciality: docsInfo.speciality,
+          fees: docsInfo.fees,
+          available: docsInfo?.available,
+        },
+        amount: docsInfo.fees,
+        date: new Date().toISOString(),
+      },
+        {
+          headers: {
+            token: token,
+          }
+        },);
+      
+      if (res.data.success) {
+        toast.success(res.data.message || "Appointment booked successfully!");
+        navigate('/myAppointment');
+      } else {
+        toast.error(res.data.message || "Failed to book appointment.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Something went wrong!");
+    } finally {
+      setLoading(false);
+    }
+  };
+  // ---------------------------------------------------------
 
   return (
     <div className='flex flex-col gap-6'>
@@ -73,7 +134,6 @@ function Appointment() {
           <img className='bg-primary w-full sm:max-w-72 rounded-lg' src={docsInfo.image} alt="" />
         </div>
 
-        {/* Doctor Details */}
         <div className='flex-1 border border-gray-400 rounded-lg p-8 py-7 mx-2 bg-white sm:0 mt-[-80px] sm:mt-0'>
           <div className='flex items-center text-2xl font-medium text-gray-900 gap-2'>
             <p>{docsInfo.name}</p>
@@ -105,7 +165,11 @@ function Appointment() {
         <h3 className='font-medium text-gray-700'>Booking Slots</h3>
         <div className='flex gap-3 items-center w-full overflow-x-auto mt-4'>
           {docSlots.length > 0 && docSlots.map((daySlot, index) => (
-            <div key={index} onClick={() => setSlotIndex(index)} className={`text-center py-6 min-w-16 rounded-full cursor-pointer ${slotIndex === index ? 'bg-primary text-white' : 'border border-gray-200'}`}>
+            <div
+              key={index}
+              onClick={() => setSlotIndex(index)}
+              className={`text-center py-6 min-w-16 rounded-full cursor-pointer ${slotIndex === index ? 'bg-primary text-white' : 'border border-gray-200'}`}
+            >
               <p>{daysOfWeek[daySlot.date.getDay()]}</p>
               <p>{daySlot.date.getDate()}</p>
             </div>
@@ -119,8 +183,8 @@ function Appointment() {
                 key={i}
                 onClick={() => setSelectedSlotIndex(i)}
                 className={`border px-6 py-3 rounded-full transition-colors ${selectedSlotIndex === i
-                    ? 'bg-primary text-white border-primary'
-                    : 'text-gray-700 border-gray-300'
+                  ? 'bg-primary text-white border-primary'
+                  : 'text-gray-700 border-gray-300'
                   }`}
               >
                 {slot.formattedTime}
@@ -129,8 +193,12 @@ function Appointment() {
           </div>
         )}
 
-        <button className='mt-4 bg-primary text-white py-4 px-12 rounded-full'>
-          Book an Appointment
+        <button
+          onClick={handleBookAppointment}
+          disabled={loading}
+          className={`mt-4 py-4 px-12 rounded-full ${loading ? 'bg-gray-400' : 'bg-primary text-white'}`}
+        >
+          {loading ? "Booking..." : "Book an Appointment"}
         </button>
       </div>
 
@@ -145,20 +213,16 @@ function Appointment() {
               <div
                 key={index}
                 onClick={() => {
-                  navigate(`/appointment/${item._id}`); window.scrollTo(0, 0); // Scroll to the top of the page
+                  navigate(`/appointment/${item._id}`);
+                  window.scrollTo(0, 0);
                 }}
-
-                className='flex flex-col border border-gray-200 rounded-lg cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:translate-y-[-5px] lg:w-52'>
-                {/* Doctor Image */}
+                className='flex flex-col border border-gray-200 rounded-lg cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:translate-y-[-5px] lg:w-52'
+              >
                 <img src={item.image} alt={item.name} className='bg-blue-50' />
-
-                {/* Availability Section */}
                 <div className='flex items-center px-2 py-1'>
                   <span className='h-2 w-2 bg-green-500 rounded-full'></span>
                   <p className='ml-2 text-green-500 font-sans text-sm font-normal'>Available</p>
                 </div>
-
-                {/* Doctor Information */}
                 <div className='px-2 pb-4'>
                   <p className='text-sm md:text-base font-semibold text-gray-900'>{item.name}</p>
                   <p className='text-xs md:text-sm font-normal text-gray-600 leading-[1.125rem]'>
