@@ -55,7 +55,7 @@ function AddDoctor() {
 
     try {
       setIsLoading(true);
-      const { data } = await axios.post("http://localhost:8000/api/admin/add-doctor", formData);
+      const { data } = await axios.post("http://localhost:8000/api/admin/add-doctor", formData , { headers: { aToken } });
 
 
       if (data.success) {

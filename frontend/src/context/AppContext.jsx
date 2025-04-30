@@ -57,7 +57,7 @@ export const AppContextProvider = (props) => {
 
   // Context value
   const value = {
-    doctors,
+    doctors,getAllDoctor,
     backendUrl,
     token, 
     setToken,

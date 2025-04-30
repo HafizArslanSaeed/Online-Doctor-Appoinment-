@@ -3,22 +3,35 @@ import { useContext } from 'react';
 import { AdminContext } from '../context/AdminContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { DoctorContext } from '../context/DoctorContext';
 
 function Login() {
   const { setAToken, backendUrl } = useContext(AdminContext);
+  const { setdToken} = useContext(DoctorContext);
   const [state, setState] = useState('Admin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const onSubmitHandler = async e => {
-    e.preventDefault(); // Prevent the default form submission behavior
+    e.preventDefault(); 
     try {
       if (state === 'Admin') {
         const { data } = await axios.post(`${backendUrl}/api/admin/login`, { email, password });
-        console.log('Full Response:', data); // Debugging log
+        console.log('Full Response:', data); 
         if (data.success) {
           localStorage.setItem('aToken', data.token);
           setAToken(data.token);
+        }
+      }
+      else {
+        const { data } = await axios.post(`${backendUrl}/api/doctor/login`, { email, password });
+        console.log('Full Response:', data); 
+        if (data.success) {
+          localStorage.setItem('dToken', data.token);
+          setdToken(data.token);
+        }
+        else {
+          toast.error(data.message);
         }
       }
     } catch (error) {

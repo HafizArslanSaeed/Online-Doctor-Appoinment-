@@ -7,10 +7,10 @@ import Banner from '../Compenents/Banner'
 function Home() {
   return (
     <div>
-        <Hero/>
-      <SpecialityMenu/>
-      <TopDoctor/>
-     <Banner/>
+      <Hero />
+      <SpecialityMenu />
+      <TopDoctor />
+      <Banner />
     </div>
   )
 }
